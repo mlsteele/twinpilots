@@ -20,6 +20,11 @@ class GamePort {
         document.body.appendChild( this.renderer.domElement )
     }
 
+    update(state) {
+        this.mesh.position.x = state.x * 10
+        this.mesh.position.y = state.y * 10
+    }
+
     animate() {
         requestAnimationFrame( _ => this.animate() )
 

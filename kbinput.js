@@ -1,8 +1,12 @@
 var keyStates = {}
 
+var verbose = false
+
 function init() {
     window.addEventListener("keydown", function(event) {
-        // console.log(event.code)
+        if (verbose) {
+            console.log(event.code)
+        }
         keyStates[event.code] = true
     })
 
@@ -15,4 +19,8 @@ function isDown(code) {
     return !!keyStates[code]
 }
 
-export default {init, isDown}
+function setVerbose(v) {
+    verbose = !!v
+}
+
+export default {init, isDown, setVerbose}
