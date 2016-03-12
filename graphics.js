@@ -35,6 +35,16 @@ class Ship {
 	// this.material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } )
 	// this.mesh = new THREE.Mesh( this.geometry, this.material )
 	this.model = shipModel.clone()
+	this.model.traverse((child) => {
+	    if (child instanceof THREE.Mesh) {
+		child.material = child.material.clone()
+		if (Math.random() > 0.5) {
+		    child.material.color = new THREE.Color(0.8, 1, 1)
+		} else {
+		    child.material.color = new THREE.Color(0, 0.2, 1)
+		}
+	    }
+	})
     }
 
     update(state) {
