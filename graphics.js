@@ -35,7 +35,7 @@ class GamePort {
 	this.addShip()
 	this.addShip()
 
-	this.renderer = new THREE.WebGLRenderer()
+	this.renderer = new THREE.WebGLRenderer({antialias: true})
 	this.renderer.setSize( this.width, this.height )
 
 	document.body.appendChild( this.renderer.domElement )
@@ -44,27 +44,35 @@ class GamePort {
 	directionalLight.position.set( 0, 0, 1 ).normalize();
 	this.scene.add( directionalLight );
 
-	// instantiate a loader
-	var loader = new THREE.OBJLoader();
+	this.loadShipModel()
+    }
 
-	// load an obj / mtl resource pair
-	loader.load(
-	    // OBJ resource URL
-	    'wraith_model/Wraith_Raider_Starship.obj',
-	    // Function when both resources are loaded
-	    ( object ) => {
+    loadShipModel() {
+	var mtlLoader = new THREE.MTLLoader()
+	var baseUrl = "wraith_model/"
+	mtlLoader.setBaseUrl(baseUrl)
+	mtlLoader.setPath(baseUrl)
+	mtlLoader.load("Wraith_Raider_Starship.mtl", (materials) => {
+	    materials.preload()
+	    var objLoader = new THREE.OBJLoader()
+	    objLoader.setMaterials(materials)
+	    objLoader.setPath(baseUrl)
+	    objLoader.load("Wraith_Raider_Starship.obj", (object) => {
 		object.rotation.x = Math.PI/2
 		object.rotation.y = Math.PI
 		object.scale.x = 0.5
 		object.scale.y = 0.5
 		object.scale.z = 0.5
-		this.scene.add( object )
+		var group = new THREE.Object3D()
+		group.add(object)
+		this.scene.add( group.clone() )
 	    },
 	    // Function called when downloads progress
 	    ( xhr ) => console.log( (xhr.loaded / xhr.total * 100) + '% loaded' ),
 	    // Function called when downloads error
 	    (xhr) => console.log("Error loading model.")
-	)
+			  )
+	})
     }
 
     addShip() {
