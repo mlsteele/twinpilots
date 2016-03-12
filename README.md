@@ -4,7 +4,7 @@ Asteroids-inspired 2D space flight game.
 ## Checkpoints
 - [x] Get hello world in browser.
 - [x] Show something on the screen.
-- [ ] Get keyboard commands appended to the screen.
+- [x] Get keyboard commands appended to the screen.
 - [ ] Show a cube on the screen.
 - [ ] Make the cube move around.
 - [ ] Get two cube moving around.
