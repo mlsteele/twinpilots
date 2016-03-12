@@ -4,39 +4,42 @@ import kbinput from "./kbinput.js"
 // kbinput.setVerbose(true)
 kbinput.init()
 
-import GamePort from "./graphics.js"
-var gameport = new GamePort()
-gameport.animate();
-
+import {loadShipModel, GamePort} from "./graphics.js"
 import GameState from "./gamestate.js"
 
-var gamestate = new GameState()
+loadShipModel(_ => {
+    var gameport = new GamePort()
+    gameport.animate();
 
-;(function gameloop() {
-    // Schedule next iteration.
-    requestAnimationFrame(gameloop)
 
-    // Use keyboard state to modify game state.
-    gamestate.ships[0].thrusters.forward = bool_to_bin(kbinput.isDown("KeyW"))
-    // gamestate.ships[0].thrusters.reverse = bool_to_bin(kbinput.isDown("KeyS"))
-    gamestate.ships[0].thrusters.ccw = bool_to_bin(kbinput.isDown("KeyA"))
-    gamestate.ships[0].thrusters.cw  = bool_to_bin(kbinput.isDown("KeyD"))
+    var gamestate = new GameState()
 
-    gamestate.ships[1].thrusters.forward = bool_to_bin(kbinput.isDown("KeyI"))
-    // gamestate.ships[1].thrusters.reverse = bool_to_bin(kbinput.isDown("KeyK"))
-    gamestate.ships[1].thrusters.ccw = bool_to_bin(kbinput.isDown("KeyJ"))
-    gamestate.ships[1].thrusters.cw  = bool_to_bin(kbinput.isDown("KeyL"))
+    ;(function gameloop() {
+	// Schedule next iteration.
+	requestAnimationFrame(gameloop)
 
-    gamestate.stepPhysics()
+	// Use keyboard state to modify game state.
+	gamestate.ships[0].thrusters.forward = bool_to_bin(kbinput.isDown("KeyW"))
+	// gamestate.ships[0].thrusters.reverse = bool_to_bin(kbinput.isDown("KeyS"))
+	gamestate.ships[0].thrusters.ccw = bool_to_bin(kbinput.isDown("KeyA"))
+	gamestate.ships[0].thrusters.cw  = bool_to_bin(kbinput.isDown("KeyD"))
 
-    // Update renderer about game.
-    gameport.update(gamestate)
-})()
+	gamestate.ships[1].thrusters.forward = bool_to_bin(kbinput.isDown("KeyI"))
+	// gamestate.ships[1].thrusters.reverse = bool_to_bin(kbinput.isDown("KeyK"))
+	gamestate.ships[1].thrusters.ccw = bool_to_bin(kbinput.isDown("KeyJ"))
+	gamestate.ships[1].thrusters.cw  = bool_to_bin(kbinput.isDown("KeyL"))
 
-function bool_to_bin(v) {
-    if (v) {
-	return 1
-    } else {
-	return 0
+	gamestate.stepPhysics()
+
+	// Update renderer about game.
+	gameport.update(gamestate)
+    })()
+
+    function bool_to_bin(v) {
+	if (v) {
+	    return 1
+	} else {
+	    return 0
+	}
     }
-}
+})
