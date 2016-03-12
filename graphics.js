@@ -39,6 +39,32 @@ class GamePort {
 	this.renderer.setSize( this.width, this.height )
 
 	document.body.appendChild( this.renderer.domElement )
+
+	var directionalLight = new THREE.DirectionalLight( 0xffeedd );
+	directionalLight.position.set( 0, 0, 1 ).normalize();
+	this.scene.add( directionalLight );
+
+	// instantiate a loader
+	var loader = new THREE.OBJLoader();
+
+	// load an obj / mtl resource pair
+	loader.load(
+	    // OBJ resource URL
+	    'wraith_model/Wraith_Raider_Starship.obj',
+	    // Function when both resources are loaded
+	    ( object ) => {
+		object.rotation.x = Math.PI/2
+		object.rotation.y = Math.PI
+		object.scale.x = 0.5
+		object.scale.y = 0.5
+		object.scale.z = 0.5
+		this.scene.add( object )
+	    },
+	    // Function called when downloads progress
+	    ( xhr ) => console.log( (xhr.loaded / xhr.total * 100) + '% loaded' ),
+	    // Function called when downloads error
+	    (xhr) => console.log("Error loading model.")
+	)
     }
 
     addShip() {
