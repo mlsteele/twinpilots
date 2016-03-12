@@ -45,6 +45,7 @@
 /***/ function(module, exports) {
 
 	document.write("OK")
+	console.log('hi');
 
 
 /***/ }

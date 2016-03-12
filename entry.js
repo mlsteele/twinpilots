@@ -1,1 +1,2 @@
-document.write("OK")
+document.write("Ow")
+console.log('hi');
