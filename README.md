@@ -5,7 +5,7 @@ Asteroids-inspired 2D space flight game.
 - [x] Get hello world in browser.
 - [x] Show something on the screen.
 - [x] Get keyboard commands appended to the screen.
-- [ ] Show a cube on the screen.
+- [x] Show a cube on the screen.
 - [ ] Make the cube move around.
 - [ ] Get two cube moving around.
 - [ ] Tweak physics till it's somewhat fun.

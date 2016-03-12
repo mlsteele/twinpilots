@@ -3,6 +3,6 @@ console.log("entry")
 import kbinput from "./kbinput.js"
 kbinput.init()
 
-import graphics from "./graphics.js"
-graphics.init()
-graphics.animate()
+import GamePort from "./graphics.js"
+var gameport = new GamePort()
+gameport.animate()

@@ -1,34 +1,33 @@
-// import THREE from "./three.min.js"
+class GamePort {
+    constructor() {
+        this.width = 400
+        this.height = 300
 
-var scene, camera, renderer, geometry, material, mesh
+        this.scene = new THREE.Scene()
 
-function init() {
-    console.log("graphics init")
+        this.camera = new THREE.PerspectiveCamera( 75, this.width / this.height, 1, 10000 )
+        this.camera.position.z = 1000
 
-    scene = new THREE.Scene()
+        this.geometry = new THREE.BoxGeometry( 200, 200, 200 )
+        this.material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } )
 
-    camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 )
-    camera.position.z = 1000
+        this.mesh = new THREE.Mesh( this.geometry, this.material )
+        this.scene.add( this.mesh )
 
-    geometry = new THREE.BoxGeometry( 200, 200, 200 )
-    material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } )
+        this.renderer = new THREE.WebGLRenderer()
+        this.renderer.setSize( this.width, this.height )
 
-    mesh = new THREE.Mesh( geometry, material )
-    scene.add( mesh )
+        document.body.appendChild( this.renderer.domElement )
+    }
 
-    renderer = new THREE.WebGLRenderer()
-    renderer.setSize( 400, 300 )
+    animate() {
+        requestAnimationFrame( _ => this.animate() )
 
-    document.body.appendChild( renderer.domElement )
+        this.mesh.rotation.x += 0.01
+        this.mesh.rotation.y += 0.02
+
+        this.renderer.render( this.scene, this.camera )
+    }
 }
 
-function animate() {
-    requestAnimationFrame( animate )
-
-    mesh.rotation.x += 0.01
-    mesh.rotation.y += 0.02
-
-    renderer.render( scene, camera )
-}
-
-export default {init, animate}
+export default GamePort
