@@ -8,27 +8,39 @@ import GamePort from "./graphics.js"
 var gameport = new GamePort()
 gameport.animate();
 
-var gamestate = {
-    x: 0,
-    y: 0,
-};
+import GameState from "./gamestate.js"
 
-(function gameloop() {
+var gamestate = new GameState()
+
+;(function gameloop() {
     // Schedule next iteration.
     requestAnimationFrame(gameloop)
 
     // Use keyboard state to modify game state.
     if (kbinput.isDown("KeyW") ){
-        gamestate.y += 1
+        gamestate.ships[0].pos.y += 1
     }
     if (kbinput.isDown("KeyS") ){
-        gamestate.y -= 1
+        gamestate.ships[0].pos.y -= 1
     }
     if (kbinput.isDown("KeyA") ){
-        gamestate.x -= 1
+        gamestate.ships[0].pos.x -= 1
     }
     if (kbinput.isDown("KeyD") ){
-        gamestate.x += 1
+        gamestate.ships[0].pos.x += 1
+    }
+
+    if (kbinput.isDown("KeyI") ){
+        gamestate.ships[1].pos.y += 1
+    }
+    if (kbinput.isDown("KeyK") ){
+        gamestate.ships[1].pos.y -= 1
+    }
+    if (kbinput.isDown("KeyJ") ){
+        gamestate.ships[1].pos.x -= 1
+    }
+    if (kbinput.isDown("KeyL") ){
+        gamestate.ships[1].pos.x += 1
     }
 
     // Update renderer about game.

@@ -6,8 +6,8 @@ Asteroids-inspired 2D space flight game.
 - [x] Show something on the screen.
 - [x] Get keyboard commands appended to the screen.
 - [x] Show a cube on the screen.
-- [ ] Make the cube move around.
-- [ ] Get two cube moving around.
+- [x] Make the cube move around.
+- [x] Get two cube moving around.
 - [ ] Tweak physics till it's somewhat fun.
 - [ ] Redo physics to be server authoritative.
 - [ ] Add bullets.
