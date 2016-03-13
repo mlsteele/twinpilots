@@ -46,25 +46,31 @@ class Ship {
             }
         })
 
-        this.addThruster()
+        this.thrusters = []
+        this.addThruster(new THREE.Vector3(-130, 45, 30), Math.PI)
+        this.addThruster(new THREE.Vector3(-130, -45, 30), Math.PI)
     }
 
-    addThruster() {
+    addThruster(position, heading) {
         function vec1(x) { return new THREE.Vector3(x, x, x) }
 
-        this.particleGroup = new SPE.Group({
+        var particleGroup = new SPE.Group({
             maxParticleCount: 250000,
         })
 
-        this.particleEmitter = new SPE.Emitter({
+        var powerGoal = 0
+        var powerCurrent = 0
+
+        var maxMainVel = 2000
+        var particleEmitter = new SPE.Emitter({
             particleCount: 5000,
-            maxAge: { value: .05, spread: .1 },
+            maxAge: { value: .03, spread: .1 },
             position: {
                 value: new THREE.Vector3(0, 0, 0),
                 spread: vec1(20)
             },
             velocity: {
-                value: new THREE.Vector3(2000, 0, 0),
+                value: new THREE.Vector3(maxMainVel, 0, 0),
                 spread: new THREE.Vector3(1000, 500, 500)
             },
             acceleration: {
@@ -79,13 +85,34 @@ class Ship {
             opacity: { value: 0.01 },
             size: { value: 20 },
         });
-        setTimeout(_ => this.particleEmitter.disable(), 1000)
-        setTimeout(_ => this.particleEmitter.enable(), 2000)
 
-        this.particleGroup.addEmitter(this.particleEmitter)
-        this.model.add(this.particleGroup.mesh)
-        this.particleGroup.mesh.rotation.set(0,0,Math.PI)
-        this.particleGroup.mesh.position.set(-130,45,30)
+        particleGroup.addEmitter(particleEmitter)
+        particleGroup.mesh.rotation.set(0, 0, heading)
+        particleGroup.mesh.position.copy(position)
+        this.model.add(particleGroup.mesh)
+
+        function set(power) {
+            powerGoal = power
+        }
+
+        function tick(timedelta) {
+            thruster.particleGroup.tick(timedelta)
+
+            powerCurrent = powerGoal - (powerGoal - powerCurrent) * 0.85
+
+            if (powerCurrent > 0.2) {
+                particleEmitter.enable()
+            } else {
+                particleEmitter.disable()
+            }
+
+            particleEmitter.velocity.value = particleEmitter.velocity.value.setX(maxMainVel * powerCurrent)
+        }
+
+        var thruster = {particleGroup, particleEmitter, set, tick}
+        this.thrusters.push(thruster)
+        window.th = thruster
+        return thruster
     }
 
     update(state, timedelta) {
@@ -106,7 +133,10 @@ class Ship {
         this.model.position.x = state.pos.x * 10
         this.model.position.y = state.pos.y * 10
 
-        this.particleGroup.tick(timedelta)
+        // Thrusters
+        this.thrusters.forEach((thruster) => thruster.tick(timedelta))
+        this.thrusters[0].set(state.thrusters.forward - state.thrusters.ccw * 0.5)
+        this.thrusters[1].set(state.thrusters.forward - state.thrusters.cw  * 0.5)
     }
 
     addTo(scene) {
