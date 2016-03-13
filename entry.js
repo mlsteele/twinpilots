@@ -4,8 +4,10 @@ import kbinput from "./kbinput.js"
 // kbinput.setVerbose(true)
 kbinput.init()
 
+import Constants from "./constants.js"
 import {loadShipModel, GamePort} from "./graphics.js"
 import GameState from "./gamestate.js"
+import CommClient from "./commclient.js"
 
 loadShipModel(_ => {
     var gameport = new GamePort()
@@ -13,32 +15,51 @@ loadShipModel(_ => {
 
     var gamestate = new GameState()
 
-    ;(function gameloop() {
-        // Schedule next iteration.
-        requestAnimationFrame(gameloop)
+    function get_inputstate() {
+        var inputstate = {
+            left_forward: bool_to_bin(kbinput.isDown("KeyW")),
+            left_back: bool_to_bin(kbinput.isDown("KeyS")),
+            left_left: bool_to_bin(kbinput.isDown("KeyA")),
+            left_right: bool_to_bin(kbinput.isDown("KeyD")),
 
+            right_forward: bool_to_bin(kbinput.isDown("KeyI")),
+            right_back: bool_to_bin(kbinput.isDown("KeyK")),
+            right_left: bool_to_bin(kbinput.isDown("KeyJ")),
+            right_right: bool_to_bin(kbinput.isDown("KeyL")),
+        }
+        return inputstate
+    }
+
+    setInterval(function physicsloop() {
         // Use keyboard state to modify game state.
-        gamestate.ships[0].thrusters.forward = bool_to_bin(kbinput.isDown("KeyW"))
-        // gamestate.ships[0].thrusters.reverse = bool_to_bin(kbinput.isDown("KeyS"))
-        gamestate.ships[0].thrusters.ccw = bool_to_bin(kbinput.isDown("KeyA"))
-        gamestate.ships[0].thrusters.cw  = bool_to_bin(kbinput.isDown("KeyD"))
-
-        gamestate.ships[1].thrusters.forward = bool_to_bin(kbinput.isDown("KeyI"))
-        // gamestate.ships[1].thrusters.reverse = bool_to_bin(kbinput.isDown("KeyK"))
-        gamestate.ships[1].thrusters.ccw = bool_to_bin(kbinput.isDown("KeyJ"))
-        gamestate.ships[1].thrusters.cw  = bool_to_bin(kbinput.isDown("KeyL"))
+        var inputstate = get_inputstate()
+        gamestate.applyInput(inputstate)
 
         gamestate.stepPhysics()
+
+    }, 1000 / Constants.physicsRate)
+
+    ;(function renderloop() {
+        // Schedule next iteration.
+        requestAnimationFrame(renderloop)
 
         // Update renderer about game.
         gameport.update(gamestate)
     })()
 
+    // Communicate with server.
+    var comm = new CommClient()
+    function onkbchange() {
+        comm.send(get_inputstate())
+    }
+    kbinput.emitter.addListener("keyup", onkbchange)
+    kbinput.emitter.addListener("keydown", onkbchange)
+    setInterval(onkbchange, 1000 / 5)
+    comm.emitter.addListener("gamestate", function(server_gamestate) {
+        gamestate = new GameState(server_gamestate)
+    })
+
     function bool_to_bin(v) {
-        if (v) {
-            return 1
-        } else {
-            return 0
-        }
+        if (v) { return 1 } else { return 0 }
     }
 })
