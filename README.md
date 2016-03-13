@@ -1,6 +1,12 @@
 # Twin Pilots
 Asteroids-inspired 2D space flight game.
 
+## Running
+```shell
+$ webpack-dev-server --inline  # Starts client server localhost:8080
+$ nodemon server.js            # Starts websocket server on localhost:8073
+```
+
 ## Checkpoints
 - [x] Get hello world in browser.
 - [x] Show something on the screen.
