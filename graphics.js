@@ -92,11 +92,40 @@ class GamePort {
         // this.grid.poisiton.z = 1
         this.scene.add(this.grid)
 
-        this.tick = 0
         this.clock = new THREE.Clock(true)
 
-        this.particleSystem = new THREE.GPUParticleSystem({maxParticles: 250000})
-        this.scene.add(this.particleSystem)
+        this.particleGroup = new SPE.Group({
+            maxParticleCount: 250000,
+        })
+        function vec1(x) { return new THREE.Vector3(x, x, x) }
+        this.particleEmitter = new SPE.Emitter({
+            particleCount: 5000,
+            maxAge: { value: .3, spread: .1 },
+            position: {
+                value: new THREE.Vector3(0, 0, 0),
+                spread: vec1(20)
+            },
+            velocity: {
+                value: new THREE.Vector3(2000, 0, 0),
+                spread: vec1(300)
+            },
+            acceleration: {
+                value: new THREE.Vector3(0, 0, 0),
+                spread: vec1(1000)
+            },
+            drag: { value: 0.2 },
+            wiggle: { value: 100 },
+            color: {
+                value: new THREE.Color(1, 1, 1),
+            },
+            opacity: { value: 0.01 },
+            size: { value: [10, 20, 30, 40, 50, 60, 70, 80, 40, 20] },
+        });
+        setTimeout(_ => this.particleEmitter.disable(), 1000)
+        setTimeout(_ => this.particleEmitter.enable(), 2000)
+
+        this.particleGroup.addEmitter(this.particleEmitter)
+        this.scene.add(this.particleGroup.mesh)
 
         this.ships = []
         this.addShip()
@@ -114,25 +143,7 @@ class GamePort {
     }
 
     update(state) {
-        this.tick += this.clock.getDelta()
-        this.particleSystem.update(this.tick * 10)
-
-        var particleSpawnOptions = {
-            position: new THREE.Vector3(250, 0, 200),
-            positionRandomness: 100,
-            velocity: new THREE.Vector3(0, 0, 10),
-            velocityRandomness: .4,
-            color: 0xff8800,
-            colorRandomness: .2,
-            turbulence: 10,
-            lifetime: 50,
-            size: 2,
-            sizeRandomness: 1
-        }
-        for (var i = 0; i < 1000; i++) {
-            this.particleSystem.spawnParticle(particleSpawnOptions)
-        }
-
+        this.particleGroup.tick(this.clock.getDelta())
 
         var shipsForward = new THREE.Vector3(0, 0, 0)
 
