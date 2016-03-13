@@ -45,9 +45,50 @@ class Ship {
                 }
             }
         })
+
+        this.addThruster()
     }
 
-    update(state) {
+    addThruster() {
+        function vec1(x) { return new THREE.Vector3(x, x, x) }
+
+        this.particleGroup = new SPE.Group({
+            maxParticleCount: 250000,
+        })
+
+        this.particleEmitter = new SPE.Emitter({
+            particleCount: 5000,
+            maxAge: { value: .05, spread: .1 },
+            position: {
+                value: new THREE.Vector3(0, 0, 0),
+                spread: vec1(20)
+            },
+            velocity: {
+                value: new THREE.Vector3(2000, 0, 0),
+                spread: new THREE.Vector3(1000, 500, 500)
+            },
+            acceleration: {
+                value: new THREE.Vector3(0, 0, 0),
+                spread: vec1(100)
+            },
+            drag: { value: 0.1 },
+            wiggle: { value: 100 },
+            color: {
+                value: new THREE.Color(1, 1, 1),
+            },
+            opacity: { value: 0.01 },
+            size: { value: 20 },
+        });
+        setTimeout(_ => this.particleEmitter.disable(), 1000)
+        setTimeout(_ => this.particleEmitter.enable(), 2000)
+
+        this.particleGroup.addEmitter(this.particleEmitter)
+        this.model.add(this.particleGroup.mesh)
+        this.particleGroup.mesh.rotation.set(0,0,Math.PI)
+        this.particleGroup.mesh.position.set(-130,45,30)
+    }
+
+    update(state, timedelta) {
         // Rotate
         // this.mesh.rotation.x += 0.01
         // this.mesh.rotation.y += 0.02
@@ -64,6 +105,8 @@ class Ship {
         // Translate
         this.model.position.x = state.pos.x * 10
         this.model.position.y = state.pos.y * 10
+
+        this.particleGroup.tick(timedelta)
     }
 
     addTo(scene) {
@@ -94,39 +137,6 @@ class GamePort {
 
         this.clock = new THREE.Clock(true)
 
-        this.particleGroup = new SPE.Group({
-            maxParticleCount: 250000,
-        })
-        function vec1(x) { return new THREE.Vector3(x, x, x) }
-        this.particleEmitter = new SPE.Emitter({
-            particleCount: 5000,
-            maxAge: { value: .3, spread: .1 },
-            position: {
-                value: new THREE.Vector3(0, 0, 0),
-                spread: vec1(20)
-            },
-            velocity: {
-                value: new THREE.Vector3(2000, 0, 0),
-                spread: vec1(300)
-            },
-            acceleration: {
-                value: new THREE.Vector3(0, 0, 0),
-                spread: vec1(1000)
-            },
-            drag: { value: 0.2 },
-            wiggle: { value: 100 },
-            color: {
-                value: new THREE.Color(1, 1, 1),
-            },
-            opacity: { value: 0.01 },
-            size: { value: [10, 20, 30, 40, 50, 60, 70, 80, 40, 20] },
-        });
-        setTimeout(_ => this.particleEmitter.disable(), 1000)
-        setTimeout(_ => this.particleEmitter.enable(), 2000)
-
-        this.particleGroup.addEmitter(this.particleEmitter)
-        this.scene.add(this.particleGroup.mesh)
-
         this.ships = []
         this.addShip()
         this.addShip()
@@ -143,12 +153,12 @@ class GamePort {
     }
 
     update(state) {
-        this.particleGroup.tick(this.clock.getDelta())
+        var timedelta = this.clock.getDelta()
 
         var shipsForward = new THREE.Vector3(0, 0, 0)
 
         for (var i = 0; i < state.ships.length; i++) {
-            this.ships[i].update(state.ships[i])
+            this.ships[i].update(state.ships[i], timedelta)
 
             var forward = new THREE.Vector3(1, 0, 0).applyAxisAngle(
                 new THREE.Vector3(0, 0, 1), state.ships[i].pos.heading)
