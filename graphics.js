@@ -34,7 +34,7 @@ function loadShipModel(callback) {
 }
 
 class Ship {
-    constructor() {
+    constructor({color}) {
         // this.geometry = new THREE.BoxGeometry( 200, 200, 200 )
         // this.material = new THREE.MeshBasicMaterial( { color: 0xff0000, wireframe: true } )
         // this.mesh = new THREE.Mesh( this.geometry, this.material )
@@ -42,10 +42,13 @@ class Ship {
         this.model.traverse((child) => {
             if (child instanceof THREE.Mesh) {
                 child.material = child.material.clone()
-                if (Math.random() > 0.5) {
+                switch (color) {
+                case "yellow":
                     child.material.color = new THREE.Color(0.8, 1, 1)
-                } else {
+                    break;
+                case "green":
                     child.material.color = new THREE.Color(0, 0.2, 1)
+                    break;
                 }
             }
         })
@@ -148,6 +151,10 @@ class Ship {
     addTo(scene) {
         scene.add(this.model)
     }
+
+    removeFrom(scene) {
+        scene.remove(this.model)
+    }
 }
 
 class GamePort {
@@ -174,8 +181,6 @@ class GamePort {
         this.clock = new THREE.Clock(true)
 
         this.ships = []
-        this.addShip()
-        this.addShip()
 
         var directionalLight = new THREE.DirectionalLight( 0xffeedd );
         directionalLight.position.set( 0, 0, 1 ).normalize();
@@ -198,31 +203,60 @@ class GamePort {
         this.scene.add(x2)
     }
 
-    addShip() {
-        var ship = new Ship()
-        this.ships.push(ship)
-        ship.addTo(this.scene)
+    shipColorFromHand(hand) {
+        switch (hand) {
+        case "left":
+            return "yellow"
+            break;
+        case "right":
+            return "green"
+            break;
+        }
     }
 
     update(state) {
         var timedelta = this.clock.getDelta()
 
+        // Sync ships existance.
+        for (var shipState of state.ships) {
+            // Create ships that newly exist.
+            if (!this.ships[shipState.id]) {
+                var ship = new Ship({color: this.shipColorFromHand(shipState.hand)})
+                this.ships[shipState.id] = ship
+                ship.addTo(this.scene)
+            }
+        }
+        for (var id in this.ships) {
+            // Delete ships that no longer exist.
+            if (!state.ships.map((x) => x.id).includes(id)) {
+                this.ships[id].removeFrom(this.scene)
+                delete this.ships[id]
+            }
+        }
+
         var shipsForward = new THREE.Vector3(0, 0, 0)
 
-        for (var i = 0; i < state.ships.length; i++) {
-            this.ships[i].update(state.ships[i], timedelta)
+        for (var shipState of state.ships) {
+            var id = shipState.id
+            this.ships[id].update(shipState, timedelta)
 
             var forward = new THREE.Vector3(1, 0, 0).applyAxisAngle(
-                new THREE.Vector3(0, 0, 1), state.ships[i].pos.heading)
+                new THREE.Vector3(0, 0, 1), shipState.pos.heading)
             shipsForward.add(forward)
         }
 
-        var shipsCenter = this.ships[0].model.position.clone().lerp(
-            this.ships[1].model.position, 0.5)
-        var shipsDiff = this.ships[0].model.position.clone().sub(
-            this.ships[1].model.position)
+        var ship0id = state.ships[0].id
+        var ship1id = state.ships[1].id
 
-        this.camera.position.copy(shipsCenter.clone().sub(shipsForward.clone().multiplyScalar(20)))
+        var shipsCenter = this.ships[ship0id].model.position.clone().lerp(
+            this.ships[ship1id].model.position, 0.5)
+        var shipsDiff = this.ships[ship0id].model.position.clone().sub(
+            this.ships[ship1id].model.position)
+
+        this.camera.position.copy(
+            shipsCenter.clone()
+                .sub(shipsForward.clone().multiplyScalar(20))
+                .sub(shipsDiff.clone().setLength(20)))
         this.camera.position.z = shipsDiff.length() * 0.6 + 20
 
         this.camera.rotation.z = Math.atan2(shipsForward.y, shipsForward.x) - Math.PI/2
