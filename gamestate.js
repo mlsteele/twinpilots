@@ -33,19 +33,25 @@ class GameState {
 	var timestep = 1 / 100
 
 	for (let ship of this.ships) {
-	    var thrust_factor = 50
+	    // Directional thrust.
+	    var thrust_factor = 180
 	    var thrust_x = Math.cos(ship.pos.heading) * ship.thrusters.forward * thrust_factor
 	    var thrust_y = Math.sin(ship.pos.heading) * ship.thrusters.forward * thrust_factor
 	    ship.vel.x += thrust_x * timestep
 	    ship.vel.y += thrust_y * timestep
 
-	    var rotation_thrust_factor = 0.02
+	    // Rotational thrust.
+	    var rotation_thrust_factor = 0.1
 	    ship.vel.rotation += ship.thrusters.ccw * rotation_thrust_factor * timestep
 	    ship.vel.rotation -= ship.thrusters.cw  * rotation_thrust_factor * timestep
 
+	    // Integrate.
 	    ship.pos.x += ship.vel.x * timestep
 	    ship.pos.y += ship.vel.y * timestep
 	    ship.pos.heading += ship.vel.rotation
+
+	    // Dampening
+	    ship.vel.rotation *= Math.pow(.2, timestep)
 	}
     }
 }
