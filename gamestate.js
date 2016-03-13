@@ -3,7 +3,7 @@ class GameState {
         this.ships = []
         this.addShip()
         this.addShip()
-        this.ships[1].pos.x = 50
+        this.ships[1].pos.x = 1
     }
 
     addShip() {
@@ -34,7 +34,7 @@ class GameState {
 
         for (let ship of this.ships) {
             // Directional thrust.
-            var thrust_factor = 180
+            var thrust_factor = 4
             var thrust_x = Math.cos(ship.pos.heading) * ship.thrusters.forward * thrust_factor
             var thrust_y = Math.sin(ship.pos.heading) * ship.thrusters.forward * thrust_factor
             ship.vel.x += thrust_x * timestep

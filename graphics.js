@@ -1,5 +1,7 @@
 var shipModel = null
 
+var particleScale = 0.018289962211089424
+
 function loadShipModel(callback) {
     var mtlLoader = new THREE.MTLLoader()
     var baseUrl = "wraith_model/"
@@ -13,9 +15,11 @@ function loadShipModel(callback) {
         objLoader.load("Wraith_Raider_Starship.obj", (object) => {
             object.rotation.x = Math.PI/2
             object.rotation.y = Math.PI/2
-            object.scale.x = 0.5
-            object.scale.y = 0.5
-            object.scale.z = 0.5
+            var bbox = new THREE.Box3().setFromObject(object)
+            // Target size of 10.
+            var scaleFactor = 10 / Math.max(bbox.size().x, bbox.size().y, bbox.size().z)
+            console.log(scaleFactor)
+            object.scale.set(scaleFactor, scaleFactor, scaleFactor)
             var group = new THREE.Object3D()
             group.add(object)
             shipModel = group
@@ -47,8 +51,9 @@ class Ship {
         })
 
         this.thrusters = []
-        this.addThruster(new THREE.Vector3(-130, 45, 30), Math.PI)
-        this.addThruster(new THREE.Vector3(-130, -45, 30), Math.PI)
+        var thrusterOffset = new THREE.Vector3(-4.9, .95, 1.45)
+        this.addThruster(thrusterOffset.clone(), Math.PI)
+        this.addThruster(thrusterOffset.clone().setY(-thrusterOffset.y), Math.PI)
     }
 
     addThruster(position, heading) {
@@ -82,11 +87,12 @@ class Ship {
             color: {
                 value: new THREE.Color(1, 1, 1),
             },
-            opacity: { value: 0.01 },
-            size: { value: 20 },
+            opacity: { value: 0.008 },
+            size: { value: .8 },
         });
 
         particleGroup.addEmitter(particleEmitter)
+        particleGroup.mesh.scale.multiplyScalar(particleScale)
         particleGroup.mesh.rotation.set(0, 0, heading)
         particleGroup.mesh.position.copy(position)
         this.model.add(particleGroup.mesh)
@@ -152,13 +158,13 @@ class GamePort {
         this.scene = new THREE.Scene()
 
         this.camera = new THREE.PerspectiveCamera( 75, this.width / this.height, 1, 10000 )
-        this.camera.position.z = 2000
+        this.camera.position.z = 100
 
         this.renderer = new THREE.WebGLRenderer({antialias: true})
         this.renderer.setSize( this.width, this.height )
         document.body.appendChild( this.renderer.domElement )
 
-        this.grid = new THREE.GridHelper(100000, 300)
+        this.grid = new THREE.GridHelper(2000, 10)
         this.grid.setColors(0xff0000, 0x505050)
         this.grid.rotation.x = Math.PI/2
         this.grid.position.z = 0
@@ -174,6 +180,22 @@ class GamePort {
         var directionalLight = new THREE.DirectionalLight( 0xffeedd );
         directionalLight.position.set( 0, 0, 1 ).normalize();
         this.scene.add( directionalLight );
+
+        // this.addSizeReferenceBoxes()
+    }
+
+    addSizeReferenceBoxes() {
+        // Size reference box.
+        this.scene.add(new THREE.Mesh(
+            new THREE.BoxGeometry(10, 10, 10),
+            new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true })
+        ))
+        var x2 = new THREE.Mesh(
+            new THREE.BoxGeometry(1, 1, 1),
+            new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true })
+        )
+        x2.position.set(5, 0, 0)
+        this.scene.add(x2)
     }
 
     addShip() {
@@ -200,8 +222,8 @@ class GamePort {
         var shipsDiff = this.ships[0].model.position.clone().sub(
             this.ships[1].model.position)
 
-        this.camera.position.copy(shipsCenter.clone().sub(shipsForward.clone().multiplyScalar(1000)))
-        this.camera.position.z = shipsDiff.length() * 0.6 + 500
+        this.camera.position.copy(shipsCenter.clone().sub(shipsForward.clone().multiplyScalar(20)))
+        this.camera.position.z = shipsDiff.length() * 0.6 + 20
 
         this.camera.rotation.z = Math.atan2(shipsForward.y, shipsForward.x) - Math.PI/2
         this.camera.up.set(0, 0, 1);
