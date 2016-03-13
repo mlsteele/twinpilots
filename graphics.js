@@ -92,6 +92,12 @@ class GamePort {
         // this.grid.poisiton.z = 1
         this.scene.add(this.grid)
 
+        this.tick = 0
+        this.clock = new THREE.Clock(true)
+
+        this.particleSystem = new THREE.GPUParticleSystem({maxParticles: 250000})
+        this.scene.add(this.particleSystem)
+
         this.ships = []
         this.addShip()
         this.addShip()
@@ -108,6 +114,26 @@ class GamePort {
     }
 
     update(state) {
+        this.tick += this.clock.getDelta()
+        this.particleSystem.update(this.tick * 10)
+
+        var particleSpawnOptions = {
+            position: new THREE.Vector3(250, 0, 200),
+            positionRandomness: 100,
+            velocity: new THREE.Vector3(0, 0, 10),
+            velocityRandomness: .4,
+            color: 0xff8800,
+            colorRandomness: .2,
+            turbulence: 10,
+            lifetime: 50,
+            size: 2,
+            sizeRandomness: 1
+        }
+        for (var i = 0; i < 1000; i++) {
+            this.particleSystem.spawnParticle(particleSpawnOptions)
+        }
+
+
         var shipsForward = new THREE.Vector3(0, 0, 0)
 
         for (var i = 0; i < state.ships.length; i++) {
