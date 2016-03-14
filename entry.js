@@ -9,6 +9,7 @@ import uuid from "./uuid.js"
 
 // kbinput.setVerbose(true)
 kbinput.init()
+kbinput.preventDefault("Space")
 
 loadShipModel(_ => {
     var playerId = uuid.v4()
@@ -30,6 +31,8 @@ loadShipModel(_ => {
             right_back: bool_to_bin(kbinput.isDown("KeyK")),
             right_left: bool_to_bin(kbinput.isDown("KeyJ")),
             right_right: bool_to_bin(kbinput.isDown("KeyL")),
+
+            attack: bool_to_bin(kbinput.isDown("Space")),
         }
         return inputstate
     }
@@ -40,7 +43,7 @@ loadShipModel(_ => {
         gamestate.applyInput(playerId, inputstate)
 
         if (Constants.clientPredictionEnabled) {
-            gamestate.stepPhysics()
+            gamestate.stepState()
         }
     }, 1000 / Constants.physicsRate)
 

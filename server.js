@@ -17,7 +17,7 @@ var physicsTimer = setInterval(function() {
     for (var playerId in inputstates) {
         gamestate.applyInput(playerId, inputstates[playerId])
     }
-    gamestate.stepPhysics()
+    gamestate.stepState()
 }, 1000 / Constants.physicsRate)
 
 wss.on("connection", function connection(ws) {

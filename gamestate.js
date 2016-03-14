@@ -1,17 +1,31 @@
 import Constants from "./constants.js"
 import uuid from "./uuid.js"
 
+function seconds_to_steps(seconds) {
+    return seconds * Constants.physicsRate
+}
+
 class GameState {
     constructor(copystate) {
         if (copystate === undefined) {
             this.id = uuid.v4()
+            this.step = 0
+            this.players = {}
             this.ships = []
+            this.lasers = []
         } else {
             Object.assign(this, copystate)
         }
     }
 
     addPlayer({playerId, seq}) {
+        this.players[playerId] = {
+            // Whether the attack button is down.
+            attack: false,
+            // Step of last laser fire.
+            lastLaser: -1000,
+        }
+
         var left = this.addShip({playerId, hand: "left"})
         var right = this.addShip({playerId, hand: "right"})
         right.pos.x += 2
@@ -52,12 +66,13 @@ class GameState {
     applyInput(playerId, inputstate) {
         var left  = this.findPlayerShip(playerId, "left")
         var right = this.findPlayerShip(playerId, "right")
-        left.thrusters.forward = inputstate.left_forward
-        left.thrusters.ccw     = inputstate.left_left
-        left.thrusters.cw      = inputstate.left_right
+        left.thrusters.forward  = inputstate.left_forward
+        left.thrusters.ccw      = inputstate.left_left
+        left.thrusters.cw       = inputstate.left_right
         right.thrusters.forward = inputstate.right_forward
         right.thrusters.ccw     = inputstate.right_left
         right.thrusters.cw      = inputstate.right_right
+        this.players[playerId].attack = inputstate.attack
     }
 
     findPlayerShip(playerId, hand) {
@@ -69,9 +84,30 @@ class GameState {
         throw new Error("Could not find ship!", playerId, hand)
     }
 
-    stepPhysics() {
+    stepState() {
         var timestep = 1000 / Constants.physicsRate
+        this.step += 1
 
+        this.stepPhysics(timestep)
+
+        // Kill old lasers.
+        this.lasers = this.lasers.filter((laser) => {
+            var age = this.step - laser.birthday
+            return age < seconds_to_steps(Constants.laserLifetime)
+        })
+
+        // Fire control.
+        for (var playerId in this.players) {
+            var playerState = this.players[playerId]
+            var canFireLaser = this.step - playerState.lastLaser > seconds_to_steps(Constants.laserCooldown)
+            if (playerState.attack && canFireLaser) {
+                playerState.lastLaser = this.step
+                console.log("LASER")
+            }
+        }
+    }
+
+    stepPhysics(timestep) {
         for (let ship of this.ships) {
             // Directional thrust.
             var thrust_factor = .000008

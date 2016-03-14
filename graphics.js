@@ -57,6 +57,7 @@ class Ship {
         var thrusterOffset = new THREE.Vector3(-4.9, .95, 1.45)
         this.addThruster(thrusterOffset.clone(), Math.PI)
         this.addThruster(thrusterOffset.clone().setY(-thrusterOffset.y), Math.PI)
+        this.group = this.model
     }
 
     addThruster(position, heading) {
@@ -147,13 +148,22 @@ class Ship {
         this.thrusters[0].set(state.thrusters.forward - state.thrusters.ccw * 0.5)
         this.thrusters[1].set(state.thrusters.forward - state.thrusters.cw  * 0.5)
     }
+}
 
-    addTo(scene) {
-        scene.add(this.model)
-    }
-
-    removeFrom(scene) {
-        scene.remove(this.model)
+class Laser {
+    constructor() {
+        this.group = new THREE.Object3D()
+        this.material = new THREE.LineBasicMaterial({
+            color: 0x0000ff
+        })
+        this.geometry = new THREE.Geometry();
+        geometry.vertices.push(
+                new THREE.Vector3( -10, 0, 0 ),
+                new THREE.Vector3( 0, 10, 0 ),
+                new THREE.Vector3( 10, 0, 0 )
+        )
+        this.line = new THREE.Line( this.geometry, this.material );
+        this.group.add(this.line)
     }
 }
 
@@ -188,6 +198,8 @@ class GamePort {
         // Initialize the ships map.
         // Maps from ship id to graphical ship.
         this.ships = {}
+        // Maps from laser id to graphical laser.
+        this.lasers = {}
 
         // Create a light.
         var directionalLight = new THREE.DirectionalLight( 0xffeedd );
@@ -295,23 +307,12 @@ class GamePort {
         var timedelta = this.clock.getDelta()
 
         // Sync ships existance.
-        for (var id in this.ships) {
-            // Delete ships that no longer exist.
-            if (!state.ships.map((x) => x.id).includes(id)) {
-                console.log("Remove ship", id)
-                this.ships[id].removeFrom(this.scene)
-                delete this.ships[id]
-            }
-        }
-        for (var shipState of state.ships) {
-            // Create ships that newly exist.
-            if (!this.ships[shipState.id]) {
-                console.log("Add ship for player", shipState.playerId)
-                var ship = new Ship({color: this.shipColorFromHand(shipState.hand)})
-                this.ships[shipState.id] = ship
-                ship.addTo(this.scene)
-            }
-        }
+        this.syncExistenceList(state.ships, this.ships, (id) => {
+            // On delete.
+        }, (shipState) => {
+            // On create.
+            return new Ship({color: this.shipColorFromHand(shipState.hand)})
+        })
 
         var shipsForward = new THREE.Vector3(0, 0, 0)
 
@@ -350,6 +351,29 @@ class GamePort {
             this.backgroundMesh.position.copy(this.camera.position)
         }
 
+    }
+
+    syncExistenceList(listOfStates, mapOfGraphicals, onDelete, onCreate) {
+        // Delete objects that no longer exist.
+        for (var id in mapOfGraphicals) {
+            if (!listOfStates.map((x) => x.id).includes(id)) {
+                console.log("Remove item", id)
+                var graphical = mapOfGraphicals[id]
+                graphical.destroy && graphical.destroy()
+                this.scene.remove(graphical.group)
+                delete mapOfGraphicals[id]
+                onDelete(id)
+            }
+        }
+        // Create objects that newly exist.
+        for (var itemState of listOfStates) {
+            if (!mapOfGraphicals[itemState.id]) {
+                console.log("Add item", itemState.id)
+                var item = onCreate(itemState)
+                mapOfGraphicals[itemState.id] = item
+                this.scene.add(item.group)
+            }
+        }
     }
 
     animate() {
