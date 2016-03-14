@@ -182,7 +182,7 @@ class GamePort {
         this.grid.setColors(0xff0000, 0x505050)
         this.grid.rotation.x = Math.PI/2
         this.grid.position.z = 0
-        // this.grid.poisiton.z = 1
+        this.grid.visible = false
         this.scene.add(this.grid)
 
         // Initialize the ships map.
@@ -194,8 +194,76 @@ class GamePort {
         directionalLight.position.set( 0, 0, 1 ).normalize();
         this.scene.add( directionalLight );
 
+        // Show space background.
+        // this.addBackgroundSphere()
+        this.addBackgroundBox()
+        // this.addBackgroundStars()
+
         // Show boxes for size reference.
         // this.addSizeReferenceBoxes()
+    }
+
+    addBackgroundStars() {
+        var group = new THREE.Object3D()
+        var texture = new THREE.TextureLoader().load("images/star_particle.png")
+
+        for (var i = 0; i < 1000; i ++) {
+            var geometry = new THREE.Geometry()
+            // How far is the closest possible star.
+            var distMin = 4000
+            // How much farther the farthest can be in terms of distMin.
+            var distMaxFactor = 2.0
+            var vertex = new THREE.Vector3(
+                Math.random() - 0.5,
+                Math.random() - 0.5,
+                Math.random() - 0.5
+            )
+            vertex.setLength(Math.random() * distMin * (distMaxFactor - 1) + distMin)
+            geometry.vertices.push(vertex)
+
+            var color = new THREE.Color()
+            color.setHSL(Math.random(), 1, 0.95 + Math.random() * 0.05)
+            var material = new THREE.PointsMaterial({
+                size: 100,
+                color: color,
+                map: texture,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+            })
+            var points = new THREE.Points(geometry, material)
+            group.add(points)
+        }
+
+        this.backgroundMesh = group
+        this.scene.add(group)
+    }
+
+    addBackgroundSphere() {
+        var geometry = new THREE.SphereGeometry(5000, 32, 32)
+        var material = new THREE.MeshBasicMaterial({
+            map: THREE.ImageUtils.loadTexture("images/spacebox.jpg"),
+            side: THREE.BackSide,
+        })
+        var mesh = new THREE.Mesh(geometry, material)
+        this.backgroundMesh = mesh
+        this.scene.add(mesh)
+    }
+
+    addBackgroundBox() {
+        var size = 7000
+        var geometry = new THREE.BoxGeometry(size, size, size, 1, 1, 1)
+        var texture = new THREE.TextureLoader().load("images/galaxy_starfield.png")
+        var scale = 6
+        texture.repeat.x = 1 / 8
+        texture.repeat.y = 1 / 5
+        var material = new THREE.MeshBasicMaterial({
+            map: texture,
+            color: "#2194ce",
+            side: THREE.BackSide,
+        })
+        var mesh = new THREE.Mesh(geometry, material)
+        this.backgroundMesh = mesh
+        this.scene.add(mesh)
     }
 
     addSizeReferenceBoxes() {
@@ -276,6 +344,12 @@ class GamePort {
         this.camera.up.set(0, 0, 1);
         var camTarget = shipsCenter
         this.camera.lookAt(shipsCenter)
+
+        // Background tracks camera.
+        if (this.backgroundMesh) {
+            this.backgroundMesh.position.copy(this.camera.position)
+        }
+
     }
 
     animate() {
