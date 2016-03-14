@@ -1,40 +1,47 @@
 import GameState from "./gamestate.js"
 import Constants from "./constants.js"
+import uuid from "./uuid.js"
 
 var WebSocket = require('ws')
 var wss = new WebSocket.Server({ port: 8073 })
 
 var nconnected = 0
-var inputstates = null
+var inputstates = {}
 var gamestate = null
 
 var physicsTimer = setInterval(function() {
-    if (gamestate === null || inputstate === null) {
+    if (gamestate === null) {
         return
     }
 
-    gamestate.applyInput(inputstate)
+    for (var playerId in inputstates) {
+        gamestate.applyInput(playerId, inputstates[playerId])
+    }
     gamestate.stepPhysics()
 }, 1000 / Constants.physicsRate)
 
 wss.on("connection", function connection(ws) {
-    console.log("Connection opened.")
+    var playerId = uuid.v4()
+    console.log("<- Connected player: " + playerId)
     nconnected += 1
 
+    gamestate.addPlayer({playerId, seq: nconnected})
+
     var sendTimer = setInterval(function() {
-        if (gamestate === null || inputstate === null || ws.readyState !== WebSocket.OPEN) {
+        if (gamestate === null || ws.readyState !== WebSocket.OPEN) {
             return
         }
 
         var data = {
-            gamestate: gamestate
+            playerId: playerId,
+            gamestate: gamestate,
         }
         ws.send(JSON.stringify(data))
     }, 1000 / Constants.serverPushRate)
 
     ws.on("message", function(message) {
         var data = JSON.parse(message)
-        inputstate = data.inputstate
+        inputstates[playerId] = data.inputstate
     });
 
     ws.on("close", function() {
@@ -42,8 +49,9 @@ wss.on("connection", function connection(ws) {
         nconnected -= 1
         clearInterval(sendTimer)
         if (nconnected == 0) {
-            inputstate = null
-            gamestate = null
+            console.log("Reset game. All players disconnected.")
+            inputstates = {}
+            gamestate = new GameState()
         }
     })
 })

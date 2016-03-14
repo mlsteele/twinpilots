@@ -214,23 +214,25 @@ class GamePort {
         }
     }
 
-    update(state) {
+    update(playerId, state) {
         var timedelta = this.clock.getDelta()
 
         // Sync ships existance.
-        for (var shipState of state.ships) {
-            // Create ships that newly exist.
-            if (!this.ships[shipState.id]) {
-                var ship = new Ship({color: this.shipColorFromHand(shipState.hand)})
-                this.ships[shipState.id] = ship
-                ship.addTo(this.scene)
-            }
-        }
         for (var id in this.ships) {
             // Delete ships that no longer exist.
             if (!state.ships.map((x) => x.id).includes(id)) {
+                console.log("Remove ship", id)
                 this.ships[id].removeFrom(this.scene)
                 delete this.ships[id]
+            }
+        }
+        for (var shipState of state.ships) {
+            // Create ships that newly exist.
+            if (!this.ships[shipState.id]) {
+                console.log("Add ship for player", shipState.playerId)
+                var ship = new Ship({color: this.shipColorFromHand(shipState.hand)})
+                this.ships[shipState.id] = ship
+                ship.addTo(this.scene)
             }
         }
 
@@ -240,13 +242,15 @@ class GamePort {
             var id = shipState.id
             this.ships[id].update(shipState, timedelta)
 
-            var forward = new THREE.Vector3(1, 0, 0).applyAxisAngle(
-                new THREE.Vector3(0, 0, 1), shipState.pos.heading)
-            shipsForward.add(forward)
+            if (shipState.playerId === playerId) {
+                var forward = new THREE.Vector3(1, 0, 0).applyAxisAngle(
+                    new THREE.Vector3(0, 0, 1), shipState.pos.heading)
+                shipsForward.add(forward)
+            }
         }
 
-        var ship0id = state.ships[0].id
-        var ship1id = state.ships[1].id
+        var ship0id = state.findPlayerShip(playerId, "left").id
+        var ship1id = state.findPlayerShip(playerId, "right").id
 
         var shipsCenter = this.ships[ship0id].model.position.clone().lerp(
             this.ships[ship1id].model.position, 0.5)
@@ -256,7 +260,7 @@ class GamePort {
         this.camera.position.copy(
             shipsCenter.clone()
                 .sub(shipsForward.clone().multiplyScalar(20))
-                .sub(shipsDiff.clone().setLength(20)))
+                .sub(shipsDiff.clone().setLength(1)))
         this.camera.position.z = shipsDiff.length() * 0.6 + 20
 
         this.camera.rotation.z = Math.atan2(shipsForward.y, shipsForward.x) - Math.PI/2

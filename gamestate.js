@@ -6,18 +6,27 @@ class GameState {
         if (copystate === undefined) {
             this.id = uuid.v4()
             this.ships = []
-            this.addShip({hand: "left"})
-            this.addShip({hand: "right"})
-            this.ships[1].pos.x = 1
         } else {
             Object.assign(this, copystate)
         }
     }
 
-    addShip({hand}) {
+    addPlayer({playerId, seq}) {
+        var left = this.addShip({playerId, hand: "left"})
+        var right = this.addShip({playerId, hand: "right"})
+        right.pos.x += 2
+
+        left.pos.y += 2 * seq
+        left.pos.heading += Math.PI * (seq - 1)
+        right.pos.y += 2 * seq
+        right.pos.heading += Math.PI * (seq - 1)
+    }
+
+    addShip({playerId, hand}) {
         var ship = {
             id: uuid.v4(),
             hand: hand,
+            playerId: playerId,
             pos: {
                 x: 0,
                 y: 0,
@@ -37,15 +46,27 @@ class GameState {
             }
         }
         this.ships.push(ship)
+        return ship
     }
 
-    applyInput(inputstate) {
-        this.ships[0].thrusters.forward = inputstate.left_forward
-        this.ships[0].thrusters.ccw     = inputstate.left_left
-        this.ships[0].thrusters.cw      = inputstate.left_right
-        this.ships[1].thrusters.forward = inputstate.right_forward
-        this.ships[1].thrusters.ccw     = inputstate.right_left
-        this.ships[1].thrusters.cw      = inputstate.right_right
+    applyInput(playerId, inputstate) {
+        var left  = this.findPlayerShip(playerId, "left")
+        var right = this.findPlayerShip(playerId, "right")
+        left.thrusters.forward = inputstate.left_forward
+        left.thrusters.ccw     = inputstate.left_left
+        left.thrusters.cw      = inputstate.left_right
+        right.thrusters.forward = inputstate.right_forward
+        right.thrusters.ccw     = inputstate.right_left
+        right.thrusters.cw      = inputstate.right_right
+    }
+
+    findPlayerShip(playerId, hand) {
+        for (var ship of this.ships) {
+            if (ship.playerId === playerId && ship.hand === hand) {
+                return ship
+            }
+        }
+        throw new Error("Could not find ship!", playerId, hand)
     }
 
     stepPhysics() {

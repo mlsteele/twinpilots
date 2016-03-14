@@ -9,4 +9,7 @@ export default {
     // Note this is in addition to event driven updates.
     // So not very necessary, just helps with glitches.
     inputPushRate: 5,
+
+    // Whether clients should simulate locally.
+    clientPredictionEnabled: true,
 }

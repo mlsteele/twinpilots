@@ -21,7 +21,7 @@ class CommClient {
 
     _onmessage(event) {
         var data = JSON.parse(event.data)
-        this.emitter.emitEvent("gamestate", [data.gamestate])
+        this.emitter.emitEvent("message", [data])
     }
 
     _onclose() {
