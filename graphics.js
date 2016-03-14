@@ -162,15 +162,22 @@ class GamePort {
         this.width = 850
         this.height = 600
 
+        // Create a clock.
+        this.clock = new THREE.Clock(true)
+
+        // Create the scene.
         this.scene = new THREE.Scene()
 
+        // Create the camera.
         this.camera = new THREE.PerspectiveCamera( 75, this.width / this.height, 1, 10000 )
         this.camera.position.z = 100
 
+        // Create the renderer and stick it to the page.
         this.renderer = new THREE.WebGLRenderer({antialias: true})
         this.renderer.setSize( this.width, this.height )
         document.body.appendChild( this.renderer.domElement )
 
+        // Show a grid on the floor.
         this.grid = new THREE.GridHelper(2000, 10)
         this.grid.setColors(0xff0000, 0x505050)
         this.grid.rotation.x = Math.PI/2
@@ -178,14 +185,16 @@ class GamePort {
         // this.grid.poisiton.z = 1
         this.scene.add(this.grid)
 
-        this.clock = new THREE.Clock(true)
+        // Initialize the ships map.
+        // Maps from ship id to graphical ship.
+        this.ships = {}
 
-        this.ships = []
-
+        // Create a light.
         var directionalLight = new THREE.DirectionalLight( 0xffeedd );
         directionalLight.position.set( 0, 0, 1 ).normalize();
         this.scene.add( directionalLight );
 
+        // Show boxes for size reference.
         // this.addSizeReferenceBoxes()
     }
 
