@@ -53,6 +53,9 @@ class Ship {
                 case "green":
                     child.material.color = new THREE.Color(0, 0.2, 1)
                     break;
+                case "black":
+                    child.material.color = new THREE.Color(0.05, 0.05, 0.05)
+                    break;
                 }
             }
         })
@@ -144,8 +147,8 @@ class Ship {
         // this.model.rotation.y = state.thrusters.forward * -0.5
 
         // Translate
-        this.model.position.x = state.pos.x * 10
-        this.model.position.y = state.pos.y * 10
+        this.model.position.x = state.pos.x
+        this.model.position.y = state.pos.y
 
         // Thrusters
         this.thrusters.forEach((thruster) => thruster.tick(timedelta))
@@ -196,7 +199,7 @@ class GamePort {
         this.grid.setColors(0xff0000, 0x505050)
         this.grid.rotation.x = Math.PI/2
         this.grid.position.z = 0
-        this.grid.visible = false
+        // this.grid.visible = false
         this.scene.add(this.grid)
 
         // Initialize the ships map.
@@ -216,7 +219,7 @@ class GamePort {
         // this.addBackgroundStars()
 
         // Show boxes for size reference.
-        // this.addSizeReferenceBoxes()
+        this.addSizeReferenceBoxes()
     }
 
     addBackgroundStars() {
@@ -284,10 +287,12 @@ class GamePort {
 
     addSizeReferenceBoxes() {
         // Size reference box.
+        // Blue box 10 across at the origin.
         this.scene.add(new THREE.Mesh(
             new THREE.BoxGeometry(10, 10, 10),
             new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true })
         ))
+        // Pink unit box at x=5
         var x2 = new THREE.Mesh(
             new THREE.BoxGeometry(1, 1, 1),
             new THREE.MeshBasicMaterial({ color: 0xff00ff, wireframe: true })

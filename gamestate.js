@@ -28,7 +28,8 @@ class GameState {
 
         var left = this.addShip({playerId, hand: "left"})
         var right = this.addShip({playerId, hand: "right"})
-        right.pos.x += 2
+
+        right.pos.x -= 20
 
         left.pos.y += 2 * seq
         left.pos.heading += Math.PI * (seq - 1)
@@ -134,7 +135,7 @@ class GameState {
     stepPhysics(timestep) {
         for (let ship of this.ships) {
             // Directional thrust.
-            var thrust_factor = .000008
+            var thrust_factor = .00005
             var thrust_x = Math.cos(ship.pos.heading) * ship.thrusters.forward * thrust_factor
             var thrust_y = Math.sin(ship.pos.heading) * ship.thrusters.forward * thrust_factor
             ship.vel.x += thrust_x * timestep
@@ -153,7 +154,7 @@ class GameState {
             // Dampening
             ship.vel.rotation *= Math.pow(.9985, timestep)
             ship.vel.x *= Math.pow(.999, timestep)
-            ship.vel.y *= Math.pow(.9999, timestep)
+            ship.vel.y *= Math.pow(.9997, timestep)
         }
     }
 }
