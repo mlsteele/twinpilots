@@ -1,6 +1,18 @@
+import {Constants, seconds_to_steps} from "./constants.js"
+
 var shipModel = null
 
 var particleScale = 0.018289962211089424
+
+var laserBodyCanvas = generateLaserBodyCanvas()
+
+function vec_of_angle(angle) {
+    return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0)
+}
+
+function angle_of_vec(vec) {
+    return Math.atan2(vec.y, vec.x)
+}
 
 function loadShipModel(callback) {
     var mtlLoader = new THREE.MTLLoader()
@@ -31,10 +43,6 @@ function loadShipModel(callback) {
         (xhr) => console.log("Error loading model.")
                         )
     })
-}
-
-function vec_of_angle(angle) {
-    return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0)
 }
 
 class Ship {
@@ -161,16 +169,59 @@ class Laser {
     constructor({origin, direction}) {
         this.origin = origin
         this.direction = direction
+        this.beamMaxOpacity = 0.6
 
         this.group = new THREE.Object3D()
-        this.material = new THREE.LineBasicMaterial({ color: 0x5555ff })
+        this.material = new THREE.LineBasicMaterial({ color: 0xaaaaff })
         this.geometry = new THREE.Geometry();
         this.geometry.vertices.push(
             this.origin,
-            this.origin.clone().add(this.direction.setLength(50))
+            this.origin.clone().add(this.direction.setLength(5000))
         )
         this.line = new THREE.Line( this.geometry, this.material );
+        this.line.visible = false
+
+        this.beam = this.makeBeam(5000, 2)
+        this.beam.position.copy(this.origin)
+        this.beam.rotateZ(angle_of_vec(this.direction))
+
         this.group.add(this.line)
+        this.group.add(this.beam)
+    }
+
+    makeBeam(length, diameter) {
+        var beam = new THREE.Object3D()
+
+        var texture = new THREE.Texture(laserBodyCanvas)
+        texture.needsUpdate = true;
+        var color = new THREE.Color().setHSL(Math.random(), .43, .47)
+        var material    = new THREE.MeshBasicMaterial({
+            map         : texture,
+            opacity     : this.beamMaxOpacity,
+            blending    : THREE.AdditiveBlending,
+            color       : color,
+            side        : THREE.DoubleSide,
+            transparent : true,
+            depthWrite  : false,
+        })
+        this.beamMaterial = material
+
+        var geometry = new THREE.PlaneGeometry(length, diameter)
+        var nPlanes = 8;
+        for(var i = 0; i < nPlanes; i++){
+            var mesh = new THREE.Mesh(geometry, material)
+            mesh.position.x = length / 2
+            mesh.rotation.x = i/nPlanes * Math.PI
+            beam.add(mesh)
+        }
+        return beam
+    }
+
+    update(state, timedelta, currentStep) {
+        // Age is in [0, 1] where 1 is end of life.
+        var age = (currentStep - state.birthday) / seconds_to_steps(Constants.laserLifetime)
+        this.beamMaterial.opacity = this.beamMaxOpacity * (1 - age)
+        this.beamMaterial.needsUpdate = true
     }
 }
 
@@ -199,7 +250,7 @@ class GamePort {
         this.grid.setColors(0xff0000, 0x505050)
         this.grid.rotation.x = Math.PI/2
         this.grid.position.z = 0
-        // this.grid.visible = false
+        this.grid.visible = false
         this.scene.add(this.grid)
 
         // Initialize the ships map.
@@ -219,7 +270,14 @@ class GamePort {
         // this.addBackgroundStars()
 
         // Show boxes for size reference.
-        this.addSizeReferenceBoxes()
+        // this.addSizeReferenceBoxes()
+
+        // Laser for testing
+        // var testLaser = new Laser({
+        //     origin: new THREE.Vector3(-10, -10, 0),
+        //     direction: vec_of_angle(Math.PI - Math.PI/4)
+        // })
+        // this.scene.add(testLaser.group)
     }
 
     addBackgroundStars() {
@@ -328,12 +386,17 @@ class GamePort {
             // On delete.
         }, (laserState) => {
             // On create.
-            var origin = new THREE.Vector3(laserState.pos.x, laserState.pos.y, 0)
+            var origin = new THREE.Vector3(laserState.pos.x, laserState.pos.y, -.5)
             var direction = vec_of_angle(laserState.pos.heading)
             return new Laser({origin, direction})
         })
 
         var shipsForward = new THREE.Vector3(0, 0, 0)
+
+        for (var laserState of state.lasers) {
+            var id = laserState.id
+            this.lasers[id].update(laserState, timedelta, state.step)
+        }
 
         for (var shipState of state.ships) {
             var id = shipState.id
@@ -399,6 +462,27 @@ class GamePort {
         requestAnimationFrame( _ => this.animate() )
         this.renderer.render( this.scene, this.camera )
     }
+}
+
+function generateLaserBodyCanvas(){
+    // Thanks to https://github.com/jeromeetienne/threex.laser
+    // init canvas
+    var canvas    = document.createElement( 'canvas' );
+    var context    = canvas.getContext( '2d' );
+    canvas.width    = 1;
+    canvas.height    = 64;
+    // set gradient
+    var gradient    = context.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop( 0  , 'rgba(  0,  0,  0,0.1)' );
+    gradient.addColorStop( 0.1, 'rgba(160,160,160,0.3)' );
+    gradient.addColorStop( 0.5, 'rgba(255,255,255,0.5)' );
+    gradient.addColorStop( 0.9, 'rgba(160,160,160,0.3)' );
+    gradient.addColorStop( 1.0, 'rgba(  0,  0,  0,0.1)' );
+    // fill the rectangle
+    context.fillStyle    = gradient;
+    context.fillRect(0,0, canvas.width, canvas.height);
+    // return the just built canvas
+    return canvas;
 }
 
 export {loadShipModel, GamePort}

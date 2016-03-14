@@ -1,9 +1,5 @@
-import Constants from "./constants.js"
+import {Constants, seconds_to_steps} from "./constants.js"
 import uuid from "./uuid.js"
-
-function seconds_to_steps(seconds) {
-    return seconds * Constants.physicsRate
-}
 
 class GameState {
     constructor(copystate) {
@@ -76,11 +72,12 @@ class GameState {
     }
 
     addLaserFromShip(ship) {
+        var offset = 2
         this.addLaser({
             playerId: ship.playerId,
             pos: {
-                x: ship.pos.x,
-                y: ship.pos.y,
+                x: ship.pos.x + Math.cos(ship.pos.heading) * offset,
+                y: ship.pos.y + Math.sin(ship.pos.heading) * offset,
                 heading: ship.pos.heading,
             }
         })

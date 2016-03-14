@@ -1,7 +1,7 @@
 console.log("entry")
 
 import kbinput from "./kbinput.js"
-import Constants from "./constants.js"
+import {Constants, seconds_to_steps} from "./constants.js"
 import {loadShipModel, GamePort} from "./graphics.js"
 import GameState from "./gamestate.js"
 import CommClient from "./commclient.js"

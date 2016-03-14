@@ -1,5 +1,5 @@
 import GameState from "./gamestate.js"
-import Constants from "./constants.js"
+import {Constants, seconds_to_steps} from "./constants.js"
 import uuid from "./uuid.js"
 
 var WebSocket = require('ws')

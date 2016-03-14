@@ -1,4 +1,4 @@
-export default {
+var Constants = {
     // Rate to update physics (Hz)
     physicsRate: 66,
 
@@ -14,7 +14,13 @@ export default {
     clientPredictionEnabled: true,
 
     // How long a laser lives in seconds.
-    laserLifetime: 0.1,
+    laserLifetime: 0.2,
     // Time between laser fire in seconds.
-    laserCooldown: 0.2,
+    laserCooldown: 0.5,
 }
+
+function seconds_to_steps(seconds) {
+    return seconds * Constants.physicsRate
+}
+
+export {Constants, seconds_to_steps}
