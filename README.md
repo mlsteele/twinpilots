@@ -1,5 +1,5 @@
 # Twin Pilots
-Asteroids-inspired 2D space flight game.
+Asteroids-inspired multiplayer space flight game.
 
 ## Running
 ```shell
