@@ -33,6 +33,10 @@ function loadShipModel(callback) {
     })
 }
 
+function vec_of_angle(angle) {
+    return new THREE.Vector3(Math.cos(angle), Math.sin(angle), 0)
+}
+
 class Ship {
     constructor({color}) {
         // this.geometry = new THREE.BoxGeometry( 200, 200, 200 )
@@ -151,16 +155,16 @@ class Ship {
 }
 
 class Laser {
-    constructor() {
+    constructor({origin, direction}) {
+        this.origin = origin
+        this.direction = direction
+
         this.group = new THREE.Object3D()
-        this.material = new THREE.LineBasicMaterial({
-            color: 0x0000ff
-        })
+        this.material = new THREE.LineBasicMaterial({ color: 0x5555ff })
         this.geometry = new THREE.Geometry();
-        geometry.vertices.push(
-                new THREE.Vector3( -10, 0, 0 ),
-                new THREE.Vector3( 0, 10, 0 ),
-                new THREE.Vector3( 10, 0, 0 )
+        this.geometry.vertices.push(
+            this.origin,
+            this.origin.clone().add(this.direction.setLength(50))
         )
         this.line = new THREE.Line( this.geometry, this.material );
         this.group.add(this.line)
@@ -312,6 +316,16 @@ class GamePort {
         }, (shipState) => {
             // On create.
             return new Ship({color: this.shipColorFromHand(shipState.hand)})
+        })
+
+        // Sync laser existance.
+        this.syncExistenceList(state.lasers, this.lasers, (id) => {
+            // On delete.
+        }, (laserState) => {
+            // On create.
+            var origin = new THREE.Vector3(laserState.pos.x, laserState.pos.y, 0)
+            var direction = vec_of_angle(laserState.pos.heading)
+            return new Laser({origin, direction})
         })
 
         var shipsForward = new THREE.Vector3(0, 0, 0)

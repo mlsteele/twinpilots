@@ -14,7 +14,7 @@ export default {
     clientPredictionEnabled: true,
 
     // How long a laser lives in seconds.
-    laserLifetime: 0.07,
+    laserLifetime: 0.1,
     // Time between laser fire in seconds.
-    laserCooldown: 0.4,
+    laserCooldown: 0.2,
 }

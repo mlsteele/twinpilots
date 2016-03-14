@@ -63,6 +63,28 @@ class GameState {
         return ship
     }
 
+    addLaser({playerId, pos: {x, y, heading}}) {
+        var laser = {
+            pos: {x, y, heading},
+            id: uuid.v4(),
+            playerId: playerId,
+            birthday: this.step,
+        }
+        this.lasers.push(laser)
+        return laser
+    }
+
+    addLaserFromShip(ship) {
+        this.addLaser({
+            playerId: ship.playerId,
+            pos: {
+                x: ship.pos.x,
+                y: ship.pos.y,
+                heading: ship.pos.heading,
+            }
+        })
+    }
+
     applyInput(playerId, inputstate) {
         var left  = this.findPlayerShip(playerId, "left")
         var right = this.findPlayerShip(playerId, "right")
@@ -103,6 +125,8 @@ class GameState {
             if (playerState.attack && canFireLaser) {
                 playerState.lastLaser = this.step
                 console.log("LASER")
+                this.addLaserFromShip(this.findPlayerShip(playerId, "left"))
+                this.addLaserFromShip(this.findPlayerShip(playerId, "right"))
             }
         }
     }
